@@ -169,7 +169,7 @@
         <div style="font-size:15px;font-weight:500;margin-bottom:12px;">Ranking del equipo</div>
         <div id="ranking-list"></div>
       </div>
-      <div class="info-bar"><strong>Puntos:</strong> 3 pts resultado exacto · 1 pt ganador correcto · 5 pts campeón · 2 pts premio especial acertado</div>
+      <div class="info-bar"><strong>Puntos:</strong> 3 pts resultado exacto · 2 pts ganador correcto · 5 pts por cada premio especial acertado</div>
     </div>
 
     <div id="tab-ver" class="section">
@@ -519,17 +519,20 @@ async function savePremios(){
 function calcPts(name){
   const bet=bets[name]; if(!bet)return 0;
   let pts=0;
-  if(results.champion&&bet.champion&&results.champion===bet.champion) pts+=5;
+  // Partidos: 3 pts resultado exacto, 2 pts ganador correcto, 0 si no acertó nada
   const rs=results.scores||{},bs=bet.scores||{};
   Object.keys(rs).forEach(id=>{
     if(!bs[id])return;
     const r=rs[id],b=bs[id];
-    if(r.h===b.h&&r.a===b.a){pts+=3;return;}
-    const rw=r.h>r.a?'h':r.a>r.h?'a':'d',bw=b.h>b.a?'h':b.a>b.h?'a':'d';
-    if(rw===bw)pts+=1;
+    if(r.h===b.h&&r.a===b.a){ pts+=3; return; }
+    const rw=r.h>r.a?'h':r.a>r.h?'a':'d', bw=b.h>b.a?'h':b.a>b.h?'a':'d';
+    if(rw===bw) pts+=2;
   });
+  // Premios especiales: 5 pts por cada acierto
   const ra=results.awards||{},pa=premios[name]||{};
-  Object.keys(ra).forEach(id=>{if(ra[id]&&pa[id]&&ra[id].toLowerCase()===pa[id].toLowerCase())pts+=2;});
+  Object.keys(ra).forEach(id=>{ if(ra[id]&&pa[id]&&ra[id].toLowerCase()===pa[id].toLowerCase()) pts+=5; });
+  // Campeón: se puntúa como premio especial (ya incluido arriba si está en awards)
+  if(results.champion&&bet.champion&&results.champion===bet.champion) pts+=5;
   return pts;
 }
 
