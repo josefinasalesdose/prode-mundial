@@ -83,6 +83,17 @@ export default async function handler(req, res) {
       return res.json({ ok: true });
     }
 
+    if (req.method === 'POST' && action === 'delete_bet') {
+      const { password, member } = req.body;
+      if (password !== ADMIN_PASS) return res.status(401).json({ error: 'Contraseña incorrecta' });
+      const bets = await dbGet('bets') || {};
+      const premios = await dbGet('premios') || {};
+      delete bets[member];
+      delete premios[member];
+      await Promise.all([dbSet('bets', bets), dbSet('premios', premios)]);
+      return res.json({ ok: true });
+    }
+
     if (req.method === 'POST' && action === 'save_results') {
       const { password, scores, champion, awards } = req.body;
       if (password !== ADMIN_PASS) return res.status(401).json({ error: 'Contraseña incorrecta' });
