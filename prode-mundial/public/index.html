@@ -36,10 +36,7 @@
   .section.active { display: block; }
   .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 12px; }
   label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 4px; }
-  input[type=text], input[type=number], input[type=password], select, textarea {
-    width: 100%; padding: 8px 10px; border-radius: var(--radius); border: 0.5px solid var(--border2);
-    background: var(--bg2); color: var(--text); font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s;
-  }
+  input[type=text], input[type=number], input[type=password], select, textarea { width: 100%; padding: 8px 10px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s; }
   input:focus, select:focus { border-color: var(--text); }
   .btn { padding: 8px 18px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; color: var(--text); font-size: 13px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
   .btn:hover { background: var(--bg2); }
@@ -48,6 +45,8 @@
   .btn-primary { background: var(--text); color: var(--bg); border-color: transparent; }
   .btn-primary:hover { opacity: 0.85; background: var(--text); }
   .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-danger { color: var(--red800); border-color: var(--red800); }
+  .btn-danger:hover { background: var(--red50); }
   .mt1 { margin-top: 1rem; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 20px; font-size: 13px; border: 0.5px solid var(--border2); background: var(--bg); color: var(--text2); cursor: pointer; transition: all 0.15s; }
@@ -93,35 +92,37 @@
   .modal { background: var(--bg); border-radius: var(--radius-lg); padding: 1.5rem; width: 320px; border: 0.5px solid var(--border2); }
   .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text); color: var(--bg); padding: 10px 20px; border-radius: var(--radius-lg); font-size: 13px; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 1100; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border2); border-top-color: var(--text); border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 6px; vertical-align: middle; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-screen { text-align: center; padding: 4rem 1rem; color: var(--text2); font-size: 14px; }
   .empty { text-align: center; padding: 2rem 1rem; color: var(--text3); font-size: 13px; }
   .error-msg { font-size: 12px; color: var(--red800); margin-top: 6px; display: none; }
+  .sync-bar { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 8px 12px; font-size: 12px; color: var(--text2); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
 <div class="shell">
   <div class="app-title">🏆 Prode Mundial 2026</div>
-  <div class="app-sub">
-    Apostá los resultados y competí con el equipo ·
-    <span class="admin-toggle" onclick="openAdminOverlay()">modo admin</span>
+  <div class="app-sub">Apostá los resultados y competí con el equipo · <span class="admin-toggle" onclick="openAdminOverlay()">modo admin</span></div>
+
+  <div class="sync-bar">
+    💾 Los datos se guardan en este navegador · Para compartir usá
+    <button class="btn btn-sm" onclick="exportData()">Exportar datos</button>
+    <button class="btn btn-sm" onclick="document.getElementById('import-input').click()">Importar datos</button>
+    <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)">
   </div>
 
   <div id="admin-panel" class="admin-panel" style="display:none;">
-    <div style="font-size:13px;font-weight:500;color:var(--amber800);margin-bottom:10px;">⚙️ Panel de administrador — actualizá los equipos clasificados</div>
+    <div style="font-size:13px;font-weight:500;color:var(--amber800);margin-bottom:10px;">⚙️ Panel de administrador</div>
     <div style="font-size:12px;font-weight:500;color:var(--amber800);margin-bottom:8px;">Equipos clasificados por ronda</div>
     <div id="admin-slots"></div>
-    <button class="btn btn-sm mt1" onclick="saveSlots()" id="btn-save-slots">Guardar equipos</button>
-
+    <button class="btn btn-sm mt1" onclick="saveSlots()">Guardar equipos</button>
     <div style="border-top:0.5px solid var(--border);margin:16px 0;"></div>
-    <div style="font-size:12px;font-weight:500;color:var(--amber800);margin-bottom:8px;">Resultados reales (para calcular puntos)</div>
-    <div style="margin-bottom:8px;">
-      <label>Campeón real</label>
-      <select id="real-champion"><option value="">Elegí el campeón real...</option></select>
-    </div>
+    <div style="font-size:12px;font-weight:500;color:var(--amber800);margin-bottom:8px;">Resultados reales</div>
+    <div style="margin-bottom:8px;"><label>Campeón real</label><select id="real-champion"><option value="">Elegí...</option></select></div>
     <div id="admin-results-list"></div>
-    <button class="btn btn-sm mt1" onclick="saveResults()" id="btn-save-results">Guardar resultados</button>
+    <button class="btn btn-sm mt1" onclick="saveResults()">Guardar resultados</button>
+    <div style="border-top:0.5px solid var(--border);margin:16px 0;"></div>
+    <div style="font-size:12px;font-weight:500;color:var(--amber800);margin-bottom:8px;">Datos del prode (compartir con el equipo)</div>
+    <button class="btn btn-sm" onclick="exportData()">📤 Exportar JSON</button>
+    <button class="btn btn-sm" style="margin-left:6px;" onclick="document.getElementById('import-input').click()">📥 Importar JSON</button>
   </div>
 
   <div class="tabs">
@@ -131,93 +132,68 @@
     <button class="tab" onclick="showTab('ver')">Ver todo</button>
   </div>
 
-  <div id="loading-screen" class="loading-screen"><span class="spinner"></span> Cargando datos...</div>
-  <div id="app-content" style="display:none;">
-
-    <!-- APOSTAR -->
-    <div id="tab-apostar" class="section active">
-      <div id="step-login" class="card">
-        <div style="font-size:14px;font-weight:500;margin-bottom:10px;">¿Quién sos?</div>
-        <div id="member-chips" class="chips" style="margin-bottom:10px;"></div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input type="text" id="new-name" placeholder="Agregá tu nombre..." style="flex:1;" onkeydown="if(event.key==='Enter')addMember()" />
-          <button class="btn btn-sm" onclick="addMember()">+ Agregar</button>
-        </div>
-        <button class="btn btn-primary mt1" style="width:100%;" onclick="selectMember()">Empezar a apostar →</button>
+  <div id="tab-apostar" class="section active">
+    <div id="step-login" class="card">
+      <div style="font-size:14px;font-weight:500;margin-bottom:10px;">¿Quién sos?</div>
+      <div id="member-chips" class="chips" style="margin-bottom:10px;"></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="new-name" placeholder="Agregá tu nombre..." style="flex:1;" onkeydown="if(event.key==='Enter')addMember()" />
+        <button class="btn btn-sm" onclick="addMember()">+ Agregar</button>
       </div>
-      <div id="step-bets" style="display:none;">
-        <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
-          <div>
-            <div style="font-size:14px;font-weight:500;" id="greeting"></div>
-            <div style="font-size:12px;color:var(--text2);">Completá los que quieras, guardá al final</div>
-          </div>
-          <button class="btn btn-sm" onclick="backToLogin()">← Cambiar</button>
-        </div>
-        <div class="card">
-          <label>¿Quién va a salir campeón?</label>
-          <select id="champion-pick"><option value="">Elegí el campeón...</option></select>
-        </div>
-        <div id="matches-list"></div>
-        <button class="btn btn-primary mt1" style="width:100%;" id="btn-save-bets" onclick="saveBets()">Guardar apuestas 🎯</button>
-      </div>
+      <button class="btn btn-primary mt1" style="width:100%;" onclick="selectMember()">Empezar a apostar →</button>
     </div>
-
-    <!-- PREMIOS -->
-    <div id="tab-premios" class="section">
-      <div id="step-premios-login" class="card">
-        <div style="font-size:14px;font-weight:500;margin-bottom:10px;">¿Quién sos?</div>
-        <div id="member-chips-p" class="chips" style="margin-bottom:10px;"></div>
-        <button class="btn btn-primary mt1" style="width:100%;" onclick="selectMemberPremios()">Completar premios →</button>
+    <div id="step-bets" style="display:none;">
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
+        <div><div style="font-size:14px;font-weight:500;" id="greeting"></div><div style="font-size:12px;color:var(--text2);">Completá los que quieras, guardá al final</div></div>
+        <button class="btn btn-sm" onclick="backToLogin()">← Cambiar</button>
       </div>
-      <div id="step-premios-form" style="display:none;">
-        <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
-          <div style="font-size:14px;font-weight:500;" id="greeting-p"></div>
-          <button class="btn btn-sm" onclick="backToPremiosLogin()">← Cambiar</button>
-        </div>
-        <div id="awards-form"></div>
-        <button class="btn btn-primary mt1" style="width:100%;" id="btn-save-premios" onclick="savePremios()">Guardar premios 🏅</button>
-      </div>
+      <div class="card"><label>¿Quién va a salir campeón?</label><select id="champion-pick"><option value="">Elegí el campeón...</option></select></div>
+      <div id="matches-list"></div>
+      <button class="btn btn-primary mt1" style="width:100%;" onclick="saveBets()">Guardar apuestas 🎯</button>
     </div>
+  </div>
 
-    <!-- TABLA -->
-    <div id="tab-tabla" class="section">
-      <div id="podium-wrap"></div>
-      <div class="card">
-        <div style="font-size:15px;font-weight:500;margin-bottom:12px;">Ranking del equipo</div>
-        <div id="ranking-list"></div>
-      </div>
-      <div class="info-bar"><strong>Puntos:</strong> 3 pts resultado exacto · 1 pt ganador correcto · 5 pts campeón · 2 pts por premio especial acertado</div>
+  <div id="tab-premios" class="section">
+    <div id="step-premios-login" class="card">
+      <div style="font-size:14px;font-weight:500;margin-bottom:10px;">¿Quién sos?</div>
+      <div id="member-chips-p" class="chips" style="margin-bottom:10px;"></div>
+      <button class="btn btn-primary mt1" style="width:100%;" onclick="selectMemberPremios()">Completar premios →</button>
     </div>
-
-    <!-- VER TODO -->
-    <div id="tab-ver" class="section">
-      <div class="card" style="margin-bottom:12px;">
-        <div style="font-size:15px;font-weight:500;margin-bottom:12px;">Campeones elegidos</div>
-        <div id="champ-summary"></div>
+    <div id="step-premios-form" style="display:none;">
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
+        <div style="font-size:14px;font-weight:500;" id="greeting-p"></div>
+        <button class="btn btn-sm" onclick="backToPremiosLogin()">← Cambiar</button>
       </div>
-      <div class="card" style="margin-bottom:12px;">
-        <div style="font-size:15px;font-weight:500;margin-bottom:12px;">Premios especiales · resumen</div>
-        <div id="awards-summary"></div>
-      </div>
-      <div class="card">
-        <div style="font-size:15px;font-weight:500;margin-bottom:12px;">Resultados más apostados</div>
-        <div id="scores-summary"></div>
-      </div>
+      <div id="awards-form"></div>
+      <button class="btn btn-primary mt1" style="width:100%;" onclick="savePremios()">Guardar premios 🏅</button>
     </div>
+  </div>
 
-  </div><!-- /app-content -->
-</div><!-- /shell -->
+  <div id="tab-tabla" class="section">
+    <div id="podium-wrap"></div>
+    <div class="card">
+      <div style="font-size:15px;font-weight:500;margin-bottom:12px;">Ranking del equipo</div>
+      <div id="ranking-list"></div>
+    </div>
+    <div class="info-bar"><strong>Puntos:</strong> 3 pts resultado exacto · 1 pt ganador correcto · 5 pts campeón · 2 pts premio especial acertado</div>
+  </div>
 
-<!-- Admin overlay -->
+  <div id="tab-ver" class="section">
+    <div class="card" style="margin-bottom:12px;"><div style="font-size:15px;font-weight:500;margin-bottom:12px;">Campeones elegidos</div><div id="champ-summary"></div></div>
+    <div class="card" style="margin-bottom:12px;"><div style="font-size:15px;font-weight:500;margin-bottom:12px;">Premios especiales · resumen</div><div id="awards-summary"></div></div>
+    <div class="card"><div style="font-size:15px;font-weight:500;margin-bottom:12px;">Resultados más apostados</div><div id="scores-summary"></div></div>
+  </div>
+</div>
+
 <div class="overlay" id="admin-overlay">
   <div class="modal">
     <div style="font-size:15px;font-weight:500;margin-bottom:4px;">🔒 Acceso admin</div>
     <div style="font-size:13px;color:var(--text2);margin-bottom:14px;">Ingresá la contraseña para continuar</div>
     <input type="password" id="admin-pass-input" placeholder="Contraseña..." onkeydown="if(event.key==='Enter')checkAdminPass()" />
-    <div class="error-msg" id="admin-pass-error">Contraseña incorrecta, intentá de nuevo.</div>
+    <div class="error-msg" id="admin-pass-error">Contraseña incorrecta.</div>
     <div style="display:flex;gap:8px;margin-top:12px;">
       <button class="btn" style="flex:1;" onclick="closeAdminOverlay()">Cancelar</button>
-      <button class="btn btn-primary" style="flex:1;" id="btn-check-pass" onclick="checkAdminPass()">Entrar</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="checkAdminPass()">Entrar</button>
     </div>
   </div>
 </div>
@@ -225,6 +201,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
+const ADMIN_PASS = 'mundial2026';
+const SK = 'prode26_';
+
 const TEAMS = [
   {n:'Argentina',f:'🇦🇷'},{n:'Brasil',f:'🇧🇷'},{n:'Francia',f:'🇫🇷'},{n:'España',f:'🇪🇸'},
   {n:'Inglaterra',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿'},{n:'Alemania',f:'🇩🇪'},{n:'Portugal',f:'🇵🇹'},{n:'Países Bajos',f:'🇳🇱'},
@@ -237,7 +216,7 @@ const TEAMS = [
   {n:'Turquía',f:'🇹🇷'},{n:'Rumania',f:'🇷🇴'},{n:'Costa Rica',f:'🇨🇷'},{n:'Panamá',f:'🇵🇦'},
   {n:'Bolivia',f:'🇧🇴'},{n:'Paraguay',f:'🇵🇾'},{n:'Perú',f:'🇵🇪'},{n:'Escocia',f:'🏴󠁧󠁢󠁳󠁣󠁴󠁿'},
   {n:'Ucrania',f:'🇺🇦'},{n:'Ghana',f:'🇬🇭'},{n:'Camerún',f:'🇨🇲'},{n:'Costa de Marfil',f:'🇨🇮'},
-  {n:'Qatar',f:'🇶🇦'},{n:'Túnez',f:'🇹🇳'},
+  {n:'Qatar',f:'🇶🇦'},{n:'Túnez',f:'🇹🇳'},{n:'Gales',f:'🏴󠁧󠁢󠁷󠁬󠁳󠁿'},
 ];
 
 const GROUPS_MATCHES = [
@@ -264,20 +243,13 @@ const GROUPS_MATCHES = [
 ];
 
 const KO_TEMPLATE = [
-  {id:'oct1',r:'Octavos de final',sh:'oct_h1',sa:'oct_a1'},
-  {id:'oct2',r:'Octavos de final',sh:'oct_h2',sa:'oct_a2'},
-  {id:'oct3',r:'Octavos de final',sh:'oct_h3',sa:'oct_a3'},
-  {id:'oct4',r:'Octavos de final',sh:'oct_h4',sa:'oct_a4'},
-  {id:'oct5',r:'Octavos de final',sh:'oct_h5',sa:'oct_a5'},
-  {id:'oct6',r:'Octavos de final',sh:'oct_h6',sa:'oct_a6'},
-  {id:'oct7',r:'Octavos de final',sh:'oct_h7',sa:'oct_a7'},
-  {id:'oct8',r:'Octavos de final',sh:'oct_h8',sa:'oct_a8'},
-  {id:'qf1',r:'Cuartos de final',sh:'qf_h1',sa:'qf_a1'},
-  {id:'qf2',r:'Cuartos de final',sh:'qf_h2',sa:'qf_a2'},
-  {id:'qf3',r:'Cuartos de final',sh:'qf_h3',sa:'qf_a3'},
-  {id:'qf4',r:'Cuartos de final',sh:'qf_h4',sa:'qf_a4'},
-  {id:'sf1',r:'Semifinales',sh:'sf_h1',sa:'sf_a1'},
-  {id:'sf2',r:'Semifinales',sh:'sf_h2',sa:'sf_a2'},
+  {id:'oct1',r:'Octavos de final',sh:'oct_h1',sa:'oct_a1'},{id:'oct2',r:'Octavos de final',sh:'oct_h2',sa:'oct_a2'},
+  {id:'oct3',r:'Octavos de final',sh:'oct_h3',sa:'oct_a3'},{id:'oct4',r:'Octavos de final',sh:'oct_h4',sa:'oct_a4'},
+  {id:'oct5',r:'Octavos de final',sh:'oct_h5',sa:'oct_a5'},{id:'oct6',r:'Octavos de final',sh:'oct_h6',sa:'oct_a6'},
+  {id:'oct7',r:'Octavos de final',sh:'oct_h7',sa:'oct_a7'},{id:'oct8',r:'Octavos de final',sh:'oct_h8',sa:'oct_a8'},
+  {id:'qf1',r:'Cuartos de final',sh:'qf_h1',sa:'qf_a1'},{id:'qf2',r:'Cuartos de final',sh:'qf_h2',sa:'qf_a2'},
+  {id:'qf3',r:'Cuartos de final',sh:'qf_h3',sa:'qf_a3'},{id:'qf4',r:'Cuartos de final',sh:'qf_h4',sa:'qf_a4'},
+  {id:'sf1',r:'Semifinales',sh:'sf_h1',sa:'sf_a1'},{id:'sf2',r:'Semifinales',sh:'sf_h2',sa:'sf_a2'},
   {id:'final',r:'Final',sh:'final_h',sa:'final_a'},
 ];
 
@@ -298,34 +270,61 @@ const AVATAR_COLORS = [
   ['#AFA9EC','#3C3489'],['#F0997B','#993C1D'],
 ];
 
+// ── STORAGE ──────────────────────────────────────────────────────
+function lsGet(k) { try { return JSON.parse(localStorage.getItem(SK+k)); } catch(e) { return null; } }
+function lsSet(k,v) { try { localStorage.setItem(SK+k, JSON.stringify(v)); } catch(e) {} }
+
 let members = [], bets = {}, premios = {}, slots = {}, results = {scores:{},champion:null,awards:{}};
-let currentMember = null, currentPMember = null;
-let adminUnlocked = false;
+let currentMember = null, currentPMember = null, adminUnlocked = false;
 
-// ── API ──────────────────────────────────────────────────────────
-async function api(action, body) {
-  const opts = body
-    ? { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) }
-    : { method: 'GET' };
-  const r = await fetch(`/api/data?action=${action}`, opts);
-  if (!r.ok) { const e = await r.json(); throw new Error(e.error || r.statusText); }
-  return r.json();
-}
-
-async function loadData() {
-  try {
-    const d = await api('load');
-    members = d.members; bets = d.bets; premios = d.premios; slots = d.slots; results = d.results || {scores:{},champion:null,awards:{}};
-  } catch(e) {
-    members = ['Jojó','Marcos','Valen','Lucas','Caro','Nico'];
-    bets = {}; premios = {}; slots = {};
-    showToast('Error cargando datos — modo offline');
-  }
-  document.getElementById('loading-screen').style.display = 'none';
-  document.getElementById('app-content').style.display = 'block';
+function loadData() {
+  members = lsGet('members') || ['Jojó','Marcos','Valen','Lucas','Caro','Nico'];
+  bets     = lsGet('bets')    || {};
+  premios  = lsGet('premios') || {};
+  slots    = lsGet('slots')   || {};
+  results  = lsGet('results') || {scores:{},champion:null,awards:{}};
   renderAll();
 }
 
+function saveAll() {
+  lsSet('members', members); lsSet('bets', bets);
+  lsSet('premios', premios); lsSet('slots', slots);
+  lsSet('results', results);
+}
+
+// ── EXPORT / IMPORT ───────────────────────────────────────────────
+function exportData() {
+  const data = { members, bets, premios, slots, results };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'prode-mundial-2026.json';
+  a.click();
+  showToast('Datos exportados 📤');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.members) members = data.members;
+      if (data.bets)    bets    = data.bets;
+      if (data.premios) premios = data.premios;
+      if (data.slots)   slots   = data.slots;
+      if (data.results) results = data.results;
+      saveAll();
+      renderAll();
+      showToast('Datos importados ✓');
+    } catch(err) { showToast('Error al importar'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ── RENDER ────────────────────────────────────────────────────────
 function renderAll() {
   renderChips('member-chips', false);
   renderChips('member-chips-p', true);
@@ -335,7 +334,6 @@ function renderAll() {
   renderSummary();
 }
 
-// ── MEMBERS ──────────────────────────────────────────────────────
 function renderChips(id, forP) {
   document.getElementById(id).innerHTML = members.map(m =>
     `<span class="chip" onclick="toggleMember(this,'${m}',${forP})">${m}</span>`
@@ -349,52 +347,27 @@ function toggleMember(el, name, forP) {
   if (forP) currentPMember = name; else currentMember = name;
 }
 
-async function addMember() {
+function addMember() {
   const inp = document.getElementById('new-name');
   const name = inp.value.trim();
   if (!name || members.includes(name)) { inp.value=''; return; }
-  inp.value='';
-  try {
-    const r = await api('add_member', {name});
-    members = r.members;
-    renderChips('member-chips', false);
-    renderChips('member-chips-p', true);
-    renderRanking();
-    showToast(`${name} agregado ✓`);
-  } catch(e) { showToast('Error: '+e.message); }
+  members.push(name); inp.value='';
+  saveAll(); renderChips('member-chips', false); renderChips('member-chips-p', true);
+  renderRanking(); showToast(`${name} agregado ✓`);
 }
 
-// ── BETS SECTION ─────────────────────────────────────────────────
-function selectMember() {
-  if (!currentMember) {
-    const chips = document.querySelectorAll('#member-chips .chip');
-    if (chips.length) { chips[0].classList.add('selected'); currentMember = members[0]; }
-    else { showToast('Seleccioná o agregá tu nombre'); return; }
-  }
-  document.getElementById('step-login').style.display = 'none';
-  document.getElementById('step-bets').style.display = 'block';
-  document.getElementById('greeting').textContent = `Hola, ${currentMember} 👋`;
-  loadExistingBets();
-}
-
-function backToLogin() {
-  document.getElementById('step-login').style.display = 'block';
-  document.getElementById('step-bets').style.display = 'none';
-}
-
-function getT(name) { return TEAMS.find(t => t.n === name) || {n: name, f:'🏆'}; }
+function getT(name) { return TEAMS.find(t => t.n === name) || {n:name,f:'🏆'}; }
 
 function renderChampionSelect() {
   const sel = document.getElementById('champion-pick');
-  sel.innerHTML = '<option value="">Elegí el campeón...</option>' +
-    TEAMS.map(t => `<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
+  sel.innerHTML = '<option value="">Elegí el campeón...</option>' + TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
 }
 
 function buildKO() {
   return KO_TEMPLATE.map(m => {
-    const h = slots[m.sh] || null, a = slots[m.sa] || null;
-    const th = h ? getT(h) : null, ta = a ? getT(a) : null;
-    return { ...m, h: h||'Por definir', a: a||'Por definir', hf: th?th.f:'🏆', af: ta?ta.f:'🏆', defined: !!(h&&a) };
+    const h = slots[m.sh]||null, a = slots[m.sa]||null;
+    const th = h?getT(h):null, ta = a?getT(a):null;
+    return {...m, h:h||'Por definir', a:a||'Por definir', hf:th?th.f:'🏆', af:ta?ta.f:'🏆', defined:!!(h&&a)};
   });
 }
 
@@ -402,12 +375,12 @@ function renderMatches() {
   const container = document.getElementById('matches-list');
   if (!container) return;
   const all = [...GROUPS_MATCHES, ...buildKO()];
-  let lastR = '', html = '';
+  let lastR='', html='';
   all.forEach(m => {
-    if (m.r !== lastR) { html += `<div class="round-label">${m.r}</div>`; lastR = m.r; }
-    const isKO = KO_TEMPLATE.some(k => k.id === m.id);
-    const dim = isKO && !m.defined ? 'opacity:0.45;' : '';
-    html += `<div class="match-row" style="${dim}">
+    if (m.r!==lastR) { html+=`<div class="round-label">${m.r}</div>`; lastR=m.r; }
+    const isKO = KO_TEMPLATE.some(k=>k.id===m.id);
+    const dim = isKO&&!m.defined ? 'opacity:0.45;' : '';
+    html+=`<div class="match-row" style="${dim}">
       <div class="team-side"><span class="team-flag">${m.hf}</span><span class="team-name">${m.h}</span></div>
       <input type="number" min="0" max="99" class="score-box" id="sh-${m.id}" placeholder="–" ${isKO&&!m.defined?'disabled':''}>
       <span class="vsep">–</span>
@@ -418,36 +391,45 @@ function renderMatches() {
   container.innerHTML = html;
 }
 
+// ── BETS ──────────────────────────────────────────────────────────
+function selectMember() {
+  if (!currentMember) {
+    const chips = document.querySelectorAll('#member-chips .chip');
+    if (chips.length) { chips[0].classList.add('selected'); currentMember = members[0]; }
+    else { showToast('Seleccioná o agregá tu nombre'); return; }
+  }
+  document.getElementById('step-login').style.display='none';
+  document.getElementById('step-bets').style.display='block';
+  document.getElementById('greeting').textContent=`Hola, ${currentMember} 👋`;
+  loadExistingBets();
+}
+
+function backToLogin() {
+  document.getElementById('step-login').style.display='block';
+  document.getElementById('step-bets').style.display='none';
+}
+
 function loadExistingBets() {
-  const b = bets[currentMember];
-  if (!b) return;
+  const b = bets[currentMember]; if (!b) return;
   if (b.champion) document.getElementById('champion-pick').value = b.champion;
   const all = [...GROUPS_MATCHES, ...buildKO()];
   all.forEach(m => {
-    const sh = document.getElementById('sh-'+m.id), sa = document.getElementById('sa-'+m.id);
-    if (sh && sa && b.scores?.[m.id] !== undefined) {
-      sh.value = b.scores[m.id].h ?? ''; sa.value = b.scores[m.id].a ?? '';
-    }
+    const sh=document.getElementById('sh-'+m.id), sa=document.getElementById('sa-'+m.id);
+    if (sh&&sa&&b.scores?.[m.id]!==undefined) { sh.value=b.scores[m.id].h??''; sa.value=b.scores[m.id].a??''; }
   });
 }
 
-async function saveBets() {
-  const btn = document.getElementById('btn-save-bets');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Guardando...';
+function saveBets() {
   const champion = document.getElementById('champion-pick').value;
   const scores = {};
   const all = [...GROUPS_MATCHES, ...buildKO()];
   all.forEach(m => {
-    const h = document.getElementById('sh-'+m.id), a = document.getElementById('sa-'+m.id);
-    if (h && a && h.value !== '' && a.value !== '') scores[m.id] = {h: parseInt(h.value), a: parseInt(a.value)};
+    const h=document.getElementById('sh-'+m.id), a=document.getElementById('sa-'+m.id);
+    if (h&&a&&h.value!==''&&a.value!=='') scores[m.id]={h:parseInt(h.value),a:parseInt(a.value)};
   });
-  try {
-    await api('save_bet', {member: currentMember, champion, scores});
-    bets[currentMember] = {champion, scores};
-    renderRanking(); renderSummary();
-    showToast('¡Apuesta guardada! 🎯');
-  } catch(e) { showToast('Error: '+e.message); }
-  btn.disabled = false; btn.innerHTML = 'Guardar apuestas 🎯';
+  bets[currentMember] = {champion, scores, updated: new Date().toISOString()};
+  saveAll(); renderRanking(); renderSummary();
+  showToast('¡Apuesta guardada! 🎯');
 }
 
 // ── PREMIOS ───────────────────────────────────────────────────────
@@ -457,100 +439,74 @@ function selectMemberPremios() {
     if (chips.length) { chips[0].classList.add('selected'); currentPMember = members[0]; }
     else { showToast('Seleccioná tu nombre'); return; }
   }
-  document.getElementById('step-premios-login').style.display = 'none';
-  document.getElementById('step-premios-form').style.display = 'block';
-  document.getElementById('greeting-p').textContent = `Hola, ${currentPMember} 👋`;
-  renderAwardsForm();
-  loadExistingPremios();
+  document.getElementById('step-premios-login').style.display='none';
+  document.getElementById('step-premios-form').style.display='block';
+  document.getElementById('greeting-p').textContent=`Hola, ${currentPMember} 👋`;
+  renderAwardsForm(); loadExistingPremios();
 }
 
 function backToPremiosLogin() {
-  document.getElementById('step-premios-login').style.display = 'block';
-  document.getElementById('step-premios-form').style.display = 'none';
+  document.getElementById('step-premios-login').style.display='block';
+  document.getElementById('step-premios-form').style.display='none';
 }
 
 function renderAwardsForm() {
-  const teamOpts = '<option value="">Elegí una selección...</option>' + TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
-  document.getElementById('awards-form').innerHTML = AWARDS.map(a => `
+  const teamOpts = '<option value="">Elegí una selección...</option>'+TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
+  document.getElementById('awards-form').innerHTML = AWARDS.map(a=>`
     <div class="award-card">
-      <div class="award-header">
-        <div class="award-icon">${a.icon}</div>
-        <div><div class="award-title">${a.title}</div><div class="award-sub">${a.sub}</div></div>
-      </div>
-      ${a.type==='team'
-        ? `<select id="aw-${a.id}">${teamOpts}</select>`
-        : `<input type="text" id="aw-${a.id}" placeholder="${a.ph||''}" />`}
+      <div class="award-header"><div class="award-icon">${a.icon}</div><div><div class="award-title">${a.title}</div><div class="award-sub">${a.sub}</div></div></div>
+      ${a.type==='team'?`<select id="aw-${a.id}">${teamOpts}</select>`:`<input type="text" id="aw-${a.id}" placeholder="${a.ph||''}" />`}
     </div>`).join('');
 }
 
 function loadExistingPremios() {
-  const p = premios[currentPMember];
-  if (!p) return;
-  AWARDS.forEach(a => { const el = document.getElementById('aw-'+a.id); if (el && p[a.id]) el.value = p[a.id]; });
+  const p = premios[currentPMember]; if (!p) return;
+  AWARDS.forEach(a => { const el=document.getElementById('aw-'+a.id); if(el&&p[a.id]) el.value=p[a.id]; });
 }
 
-async function savePremios() {
-  const btn = document.getElementById('btn-save-premios');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Guardando...';
+function savePremios() {
   const data = {};
-  AWARDS.forEach(a => { const el = document.getElementById('aw-'+a.id); if (el && el.value) data[a.id] = el.value; });
-  try {
-    await api('save_premios', {member: currentPMember, data});
-    premios[currentPMember] = data;
-    renderSummary();
-    showToast('¡Premios guardados! 🏅');
-  } catch(e) { showToast('Error: '+e.message); }
-  btn.disabled = false; btn.innerHTML = 'Guardar premios 🏅';
+  AWARDS.forEach(a => { const el=document.getElementById('aw-'+a.id); if(el&&el.value) data[a.id]=el.value; });
+  premios[currentPMember] = {...data, updated: new Date().toISOString()};
+  saveAll(); renderSummary(); showToast('¡Premios guardados! 🏅');
 }
 
 // ── RANKING ───────────────────────────────────────────────────────
 function calcPts(name) {
-  const bet = bets[name];
-  if (!bet) return 0;
+  const bet = bets[name]; if (!bet) return 0;
   let pts = 0;
-  // Champion
-  if (results.champion && bet.champion && results.champion === bet.champion) pts += 5;
-  // Match scores
-  const rs = results.scores || {};
-  const bs = bet.scores || {};
+  if (results.champion && bet.champion && results.champion===bet.champion) pts+=5;
+  const rs=results.scores||{}, bs=bet.scores||{};
   Object.keys(rs).forEach(id => {
     if (!bs[id]) return;
-    const r = rs[id], b = bs[id];
-    if (r.h === b.h && r.a === b.a) { pts += 3; return; }
-    const rw = r.h > r.a ? 'h' : r.a > r.h ? 'a' : 'd';
-    const bw = b.h > b.a ? 'h' : b.a > b.h ? 'a' : 'd';
-    if (rw === bw) pts += 1;
+    const r=rs[id], b=bs[id];
+    if (r.h===b.h&&r.a===b.a) { pts+=3; return; }
+    const rw=r.h>r.a?'h':r.a>r.h?'a':'d', bw=b.h>b.a?'h':b.a>b.h?'a':'d';
+    if (rw===bw) pts+=1;
   });
-  // Awards
-  const ra = results.awards || {};
-  const pa = premios[name] || {};
-  Object.keys(ra).forEach(id => { if (ra[id] && pa[id] && ra[id].toLowerCase() === pa[id].toLowerCase()) pts += 2; });
+  const ra=results.awards||{}, pa=premios[name]||{};
+  Object.keys(ra).forEach(id => { if(ra[id]&&pa[id]&&ra[id].toLowerCase()===pa[id].toLowerCase()) pts+=2; });
   return pts;
 }
 
 function renderRanking() {
-  const sorted = members.map((m,i) => ({
+  const sorted = members.map((m,i)=>({
     name:m, idx:i, pts:calcPts(m),
-    champion: bets[m]?.champion||null,
-    betCount: bets[m]?.scores ? Object.keys(bets[m].scores).length : 0,
-    hasPremios: !!premios[m],
-  })).sort((a,b) => b.pts-a.pts || b.betCount-a.betCount);
+    champion:bets[m]?.champion||null,
+    betCount:bets[m]?.scores?Object.keys(bets[m].scores).length:0,
+    hasPremios:!!premios[m],
+  })).sort((a,b)=>b.pts-a.pts||b.betCount-a.betCount);
 
-  const pw = document.getElementById('podium-wrap');
-  if (sorted.length >= 2) {
-    const order = sorted.length >= 3 ? [sorted[1],sorted[0],sorted[2]] : [sorted[1],sorted[0]];
-    const bc = sorted.length >= 3 ? ['pb2','pb1','pb3'] : ['pb2','pb1'];
-    const med = sorted.length >= 3 ? ['🥈','🥇','🥉'] : ['🥈','🥇'];
-    pw.innerHTML = `<div class="podium">${order.map((m,i)=>`
-      <div class="podium-slot">
-        <div class="podium-bar ${bc[i]}">${med[i]}</div>
-        <div class="podium-name">${m.name}</div>
-        <div class="podium-pts">${m.pts} pts</div>
-      </div>`).join('')}</div>`;
-  } else pw.innerHTML = '';
+  const pw=document.getElementById('podium-wrap');
+  if (sorted.length>=2) {
+    const order=sorted.length>=3?[sorted[1],sorted[0],sorted[2]]:[sorted[1],sorted[0]];
+    const bc=sorted.length>=3?['pb2','pb1','pb3']:['pb2','pb1'];
+    const med=sorted.length>=3?['🥈','🥇','🥉']:['🥈','🥇'];
+    pw.innerHTML=`<div class="podium">${order.map((m,i)=>`<div class="podium-slot"><div class="podium-bar ${bc[i]}">${med[i]}</div><div class="podium-name">${m.name}</div><div class="podium-pts">${m.pts} pts</div></div>`).join('')}</div>`;
+  } else pw.innerHTML='';
 
-  const rl = document.getElementById('ranking-list');
-  rl.innerHTML = sorted.length ? sorted.map((m,i)=>`
+  const rl=document.getElementById('ranking-list');
+  rl.innerHTML=sorted.length?sorted.map((m,i)=>`
     <div class="member-row">
       <div class="avatar" style="background:${AVATAR_COLORS[m.idx%8][0]};color:${AVATAR_COLORS[m.idx%8][1]};">${m.name.substring(0,2).toUpperCase()}</div>
       <div class="member-info">
@@ -562,210 +518,146 @@ function renderRanking() {
         </div>
       </div>
       <div class="pts-col"><div class="pts-num">${m.pts}</div><div class="pts-lbl">pts</div></div>
-      ${adminUnlocked?`<button class="btn btn-sm" style="color:var(--red800);border-color:var(--red800);margin-left:4px;font-size:11px;padding:4px 8px;" onclick="deleteBet('${m.name}')">Borrar</button>`:''}
-    </div>`).join('') : '<div class="empty">Sin participantes</div>';
+      ${adminUnlocked?`<button class="btn btn-sm btn-danger" onclick="deleteBet('${m.name}')">Borrar</button>`:''}
+    </div>`).join(''):'<div class="empty">Sin participantes</div>';
 }
 
 // ── SUMMARY ───────────────────────────────────────────────────────
 function renderSummary() {
-  // Campeones
-  const cv = {};
-  Object.entries(bets).forEach(([m,b]) => { if(b.champion) { cv[b.champion]=cv[b.champion]||[]; cv[b.champion].push(m); } });
-  const sc = Object.entries(cv).sort((a,b)=>b[1].length-a[1].length);
-  const ce = document.getElementById('champ-summary');
-  ce.innerHTML = sc.length ? sc.map(([c,v])=>`
-    <div class="winner-row">
-      <span style="font-size:22px;">${getT(c).f}</span>
-      <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:500;">${c}</div><div style="font-size:12px;color:var(--text2);">${v.join(', ')}</div></div>
-      <div style="font-size:16px;font-weight:500;color:var(--text2);">${v.length}</div>
-    </div>`).join('') : '<div class="empty">Nadie apostó todavía</div>';
+  const cv={};
+  Object.entries(bets).forEach(([m,b])=>{ if(b.champion){cv[b.champion]=cv[b.champion]||[];cv[b.champion].push(m);} });
+  const sc=Object.entries(cv).sort((a,b)=>b[1].length-a[1].length);
+  document.getElementById('champ-summary').innerHTML=sc.length?sc.map(([c,v])=>`
+    <div class="winner-row"><span style="font-size:22px;">${getT(c).f}</span>
+    <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:500;">${c}</div><div style="font-size:12px;color:var(--text2);">${v.join(', ')}</div></div>
+    <div style="font-size:16px;font-weight:500;color:var(--text2);">${v.length}</div></div>`).join(''):'<div class="empty">Nadie apostó todavía</div>';
 
-  // Premios
-  const ae = document.getElementById('awards-summary');
-  let ah = '';
-  AWARDS.forEach(award => {
-    const votes = {};
-    Object.entries(premios).forEach(([m,p]) => { if(p[award.id]) { votes[p[award.id]]=votes[p[award.id]]||[]; votes[p[award.id]].push(m); } });
-    const sv = Object.entries(votes).sort((a,b)=>b[1].length-a[1].length);
-    if (!sv.length) return;
-    ah += `<div style="margin-bottom:12px;">
-      <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;">${award.icon} ${award.title}</div>
-      <div>${sv.map(([ans,v])=>`<span class="answer-pill">${ans} <span style="color:var(--text3);font-size:10px;">${v.length}×</span></span>`).join('')}</div>
-    </div>`;
+  let ah='';
+  AWARDS.forEach(award=>{
+    const votes={};
+    Object.entries(premios).forEach(([m,p])=>{ if(p[award.id]){votes[p[award.id]]=votes[p[award.id]]||[];votes[p[award.id]].push(m);} });
+    const sv=Object.entries(votes).sort((a,b)=>b[1].length-a[1].length);
+    if(!sv.length) return;
+    ah+=`<div style="margin-bottom:12px;"><div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;">${award.icon} ${award.title}</div><div>${sv.map(([ans,v])=>`<span class="answer-pill">${ans} <span style="color:var(--text3);font-size:10px;">${v.length}×</span></span>`).join('')}</div></div>`;
   });
-  ae.innerHTML = ah || '<div class="empty">Sin votos todavía</div>';
+  document.getElementById('awards-summary').innerHTML=ah||'<div class="empty">Sin votos todavía</div>';
 
-  // Scores
-  const sc2 = {};
-  Object.entries(bets).forEach(([m,b]) => {
-    if (!b.scores) return;
-    Object.entries(b.scores).forEach(([id,s]) => {
-      const k = id+'|'+s.h+'-'+s.a;
-      if (!sc2[k]) { const match=[...GROUPS_MATCHES,...buildKO()].find(x=>x.id===id); sc2[k]={match,h:s.h,a:s.a,v:[]}; }
+  const sc2={};
+  Object.entries(bets).forEach(([m,b])=>{
+    if(!b.scores) return;
+    Object.entries(b.scores).forEach(([id,s])=>{
+      const k=id+'|'+s.h+'-'+s.a;
+      if(!sc2[k]){const match=[...GROUPS_MATCHES,...buildKO()].find(x=>x.id===id);sc2[k]={match,h:s.h,a:s.a,v:[]};}
       sc2[k].v.push(m);
     });
   });
-  const pop = Object.values(sc2).filter(x=>x.v.length>1).sort((a,b)=>b.v.length-a.v.length).slice(0,8);
-  const se = document.getElementById('scores-summary');
-  se.innerHTML = pop.length ? pop.filter(x=>x.match).map(s=>`
-    <div class="winner-row">
-      <span style="font-size:18px;">${s.match.hf}</span>
-      <div style="flex:1;padding:0 8px;min-width:0;"><div style="font-size:13px;font-weight:500;">${s.match.h} ${s.h}–${s.a} ${s.match.a}</div><div style="font-size:11px;color:var(--text2);">${s.v.join(', ')}</div></div>
-      <span style="font-size:18px;">${s.match.af}</span>
-      <span style="font-size:12px;color:var(--text2);margin-left:8px;">${s.v.length}×</span>
-    </div>`).join('') : '<div class="empty">Sin resultados en común aún</div>';
+  const pop=Object.values(sc2).filter(x=>x.v.length>1).sort((a,b)=>b.v.length-a.v.length).slice(0,8);
+  document.getElementById('scores-summary').innerHTML=pop.length?pop.filter(x=>x.match).map(s=>`
+    <div class="winner-row"><span style="font-size:18px;">${s.match.hf}</span>
+    <div style="flex:1;padding:0 8px;min-width:0;"><div style="font-size:13px;font-weight:500;">${s.match.h} ${s.h}–${s.a} ${s.match.a}</div><div style="font-size:11px;color:var(--text2);">${s.v.join(', ')}</div></div>
+    <span style="font-size:18px;">${s.match.af}</span><span style="font-size:12px;color:var(--text2);margin-left:8px;">${s.v.length}×</span></div>`).join(''):'<div class="empty">Sin resultados en común aún</div>';
 }
 
 // ── ADMIN ─────────────────────────────────────────────────────────
 function openAdminOverlay() {
   if (adminUnlocked) { toggleAdminPanel(); return; }
   document.getElementById('admin-overlay').classList.add('show');
-  setTimeout(() => document.getElementById('admin-pass-input').focus(), 80);
+  setTimeout(()=>document.getElementById('admin-pass-input').focus(),80);
 }
 
 function closeAdminOverlay() {
   document.getElementById('admin-overlay').classList.remove('show');
-  document.getElementById('admin-pass-input').value = '';
-  document.getElementById('admin-pass-error').style.display = 'none';
+  document.getElementById('admin-pass-input').value='';
+  document.getElementById('admin-pass-error').style.display='none';
 }
 
-async function checkAdminPass() {
-  const btn = document.getElementById('btn-check-pass');
-  const pass = document.getElementById('admin-pass-input').value;
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
-  try {
-    const r = await api('verify_admin', {password: pass});
-    if (r.ok) {
-      adminUnlocked = true;
-      adminPassword = pass;
-      closeAdminOverlay();
-      renderAdminPanel();
-      document.getElementById('admin-panel').style.display = 'block';
-    } else {
-      document.getElementById('admin-pass-error').style.display = 'block';
-      document.getElementById('admin-pass-input').value = '';
-      document.getElementById('admin-pass-input').focus();
-    }
-  } catch(e) { showToast('Error: '+e.message); }
-  btn.disabled = false; btn.innerHTML = 'Entrar';
+function checkAdminPass() {
+  const pass=document.getElementById('admin-pass-input').value;
+  if (pass===ADMIN_PASS) {
+    adminUnlocked=true; closeAdminOverlay();
+    renderAdminPanel(); renderAdminResults(); renderChampionSelectReal();
+    document.getElementById('admin-panel').style.display='block';
+  } else {
+    document.getElementById('admin-pass-error').style.display='block';
+    document.getElementById('admin-pass-input').value='';
+    document.getElementById('admin-pass-input').focus();
+  }
 }
 
 function toggleAdminPanel() {
-  const p = document.getElementById('admin-panel');
-  p.style.display = p.style.display === 'none' ? 'block' : 'none';
-  if (p.style.display === 'block') renderAdminPanel();
+  const p=document.getElementById('admin-panel');
+  p.style.display=p.style.display==='none'?'block':'none';
+  if(p.style.display==='block'){renderAdminPanel();renderAdminResults();renderChampionSelectReal();}
 }
 
 function renderAdminPanel() {
-  const slotDefs = [
-    {g:'Octavos de final', pairs:[
-      {l:'Partido 1',sh:'oct_h1',sa:'oct_a1'},{l:'Partido 2',sh:'oct_h2',sa:'oct_a2'},
-      {l:'Partido 3',sh:'oct_h3',sa:'oct_a3'},{l:'Partido 4',sh:'oct_h4',sa:'oct_a4'},
-      {l:'Partido 5',sh:'oct_h5',sa:'oct_a5'},{l:'Partido 6',sh:'oct_h6',sa:'oct_a6'},
-      {l:'Partido 7',sh:'oct_h7',sa:'oct_a7'},{l:'Partido 8',sh:'oct_h8',sa:'oct_a8'},
-    ]},
-    {g:'Cuartos de final', pairs:[
-      {l:'Partido 1',sh:'qf_h1',sa:'qf_a1'},{l:'Partido 2',sh:'qf_h2',sa:'qf_a2'},
-      {l:'Partido 3',sh:'qf_h3',sa:'qf_a3'},{l:'Partido 4',sh:'qf_h4',sa:'qf_a4'},
-    ]},
-    {g:'Semifinales', pairs:[{l:'Semi 1',sh:'sf_h1',sa:'sf_a1'},{l:'Semi 2',sh:'sf_h2',sa:'sf_a2'}]},
-    {g:'Final', pairs:[{l:'Final',sh:'final_h',sa:'final_a'}]},
+  const slotDefs=[
+    {g:'Octavos de final',pairs:[{l:'P1',sh:'oct_h1',sa:'oct_a1'},{l:'P2',sh:'oct_h2',sa:'oct_a2'},{l:'P3',sh:'oct_h3',sa:'oct_a3'},{l:'P4',sh:'oct_h4',sa:'oct_a4'},{l:'P5',sh:'oct_h5',sa:'oct_a5'},{l:'P6',sh:'oct_h6',sa:'oct_a6'},{l:'P7',sh:'oct_h7',sa:'oct_a7'},{l:'P8',sh:'oct_h8',sa:'oct_a8'}]},
+    {g:'Cuartos de final',pairs:[{l:'P1',sh:'qf_h1',sa:'qf_a1'},{l:'P2',sh:'qf_h2',sa:'qf_a2'},{l:'P3',sh:'qf_h3',sa:'qf_a3'},{l:'P4',sh:'qf_h4',sa:'qf_a4'}]},
+    {g:'Semifinales',pairs:[{l:'S1',sh:'sf_h1',sa:'sf_a1'},{l:'S2',sh:'sf_h2',sa:'sf_a2'}]},
+    {g:'Final',pairs:[{l:'Final',sh:'final_h',sa:'final_a'}]},
   ];
-  const opts = '<option value="">— equipo —</option>'+TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
-  let html = '';
-  slotDefs.forEach(g => {
-    html += `<div style="font-size:12px;font-weight:500;color:var(--amber800);margin:10px 0 5px;">${g.g}</div>`;
-    g.pairs.forEach(p => {
-      html += `<div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;">
-        <span style="font-size:11px;color:var(--text2);min-width:58px;">${p.l}</span>
+  const opts='<option value="">— equipo —</option>'+TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
+  let html='';
+  slotDefs.forEach(g=>{
+    html+=`<div style="font-size:12px;font-weight:500;color:var(--amber800);margin:10px 0 5px;">${g.g}</div>`;
+    g.pairs.forEach(p=>{
+      html+=`<div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;">
+        <span style="font-size:11px;color:var(--text2);min-width:28px;">${p.l}</span>
         <select id="adm-${p.sh}" style="flex:1;">${opts}</select>
         <span style="font-size:11px;color:var(--text3);">vs</span>
         <select id="adm-${p.sa}" style="flex:1;">${opts}</select>
       </div>`;
     });
   });
-  document.getElementById('admin-slots').innerHTML = html;
-  slotDefs.forEach(g => g.pairs.forEach(p => {
-    if (slots[p.sh]) document.getElementById('adm-'+p.sh).value = slots[p.sh];
-    if (slots[p.sa]) document.getElementById('adm-'+p.sa).value = slots[p.sa];
+  document.getElementById('admin-slots').innerHTML=html;
+  slotDefs.forEach(g=>g.pairs.forEach(p=>{
+    if(slots[p.sh]) document.getElementById('adm-'+p.sh).value=slots[p.sh];
+    if(slots[p.sa]) document.getElementById('adm-'+p.sa).value=slots[p.sa];
   }));
 }
 
-let adminPassword = null;
-
-async function saveSlots() {
-  const btn = document.getElementById('btn-save-slots');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Guardando...';
-  const newSlots = {};
-  document.querySelectorAll('[id^="adm-"]').forEach(sel => {
-    if (sel.value) newSlots[sel.id.replace('adm-','')] = sel.value;
-  });
-  try {
-    await api('save_slots', {password: adminPassword, slots: newSlots});
-    slots = newSlots;
-    renderMatches();
-    showToast('Equipos actualizados ✓');
-  } catch(e) { showToast('Error: '+e.message); }
-  btn.disabled = false; btn.innerHTML = 'Guardar cambios';
+function saveSlots() {
+  const newSlots={};
+  document.querySelectorAll('[id^="adm-"]').forEach(sel=>{ if(sel.value) newSlots[sel.id.replace('adm-','')]=sel.value; });
+  slots=newSlots; saveAll(); renderMatches(); showToast('Equipos actualizados ✓');
 }
 
-// ── UTILS ─────────────────────────────────────────────────────────
+function renderChampionSelectReal() {
+  const sel=document.getElementById('real-champion');
+  if(!sel) return;
+  sel.innerHTML='<option value="">Elegí...</option>'+TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
+  if(results.champion) sel.value=results.champion;
+}
+
 function renderAdminResults() {
-  // Champion select
-  const sel = document.getElementById('real-champion');
-  if (sel) {
-    sel.innerHTML = '<option value="">Elegí el campeón real...</option>' + TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
-    if (results.champion) sel.value = results.champion;
-  }
-  // Awards
-  const teamOpts = '<option value="">—</option>'+TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
-  const awardEl = document.getElementById('admin-results-list');
-  if (!awardEl) return;
-  let html = '<div style="font-size:11px;color:var(--amber800);margin-bottom:6px;">Premios especiales reales</div>';
-  AWARDS.forEach(a => {
-    html += `<div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;">
+  const teamOpts='<option value="">—</option>'+TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
+  const el=document.getElementById('admin-results-list'); if(!el) return;
+  let html='<div style="font-size:11px;color:var(--amber800);margin-bottom:6px;">Premios especiales reales</div>';
+  AWARDS.forEach(a=>{
+    html+=`<div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;">
       <span style="font-size:13px;min-width:20px;">${a.icon}</span>
       <span style="font-size:11px;color:var(--text2);flex:1;min-width:80px;">${a.title}</span>
-      ${a.type==='team'
-        ? `<select id="real-aw-${a.id}" style="flex:1;">${teamOpts}</select>`
-        : `<input type="text" id="real-aw-${a.id}" placeholder="Ganador real..." style="flex:1;" />`}
+      ${a.type==='team'?`<select id="real-aw-${a.id}" style="flex:1;">${teamOpts}</select>`:`<input type="text" id="real-aw-${a.id}" placeholder="Ganador real..." style="flex:1;" />`}
     </div>`;
   });
-  awardEl.innerHTML = html;
-  // Fill existing results
-  AWARDS.forEach(a => {
-    const el = document.getElementById('real-aw-'+a.id);
-    if (el && results.awards?.[a.id]) el.value = results.awards[a.id];
-  });
+  el.innerHTML=html;
+  AWARDS.forEach(a=>{ const e=document.getElementById('real-aw-'+a.id); if(e&&results.awards?.[a.id]) e.value=results.awards[a.id]; });
 }
 
-async function saveResults() {
-  const btn = document.getElementById('btn-save-results');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Guardando...';
-  const champion = document.getElementById('real-champion')?.value || null;
-  const awards = {};
-  AWARDS.forEach(a => { const el = document.getElementById('real-aw-'+a.id); if (el && el.value) awards[a.id] = el.value; });
-  const all = [...GROUPS_MATCHES, ...buildKO()];
-  const scores = results.scores || {};
-  try {
-    await api('save_results', {password: adminPassword, scores, champion, awards});
-    results = { scores, champion, awards };
-    renderRanking();
-    showToast('Resultados guardados ✓');
-  } catch(e) { showToast('Error: '+e.message); }
-  btn.disabled = false; btn.innerHTML = 'Guardar resultados';
+function saveResults() {
+  const champion=document.getElementById('real-champion')?.value||null;
+  const awards={};
+  AWARDS.forEach(a=>{ const el=document.getElementById('real-aw-'+a.id); if(el&&el.value) awards[a.id]=el.value; });
+  results={scores:results.scores||{}, champion, awards};
+  saveAll(); renderRanking(); showToast('Resultados guardados ✓');
 }
 
-async function deleteBet(name) {
-  if (!confirm(`¿Borrar la apuesta de ${name}?`)) return;
-  try {
-    await api('delete_bet', {password: adminPassword, member: name});
-    delete bets[name];
-    delete premios[name];
-    renderRanking();
-    renderSummary();
-    showToast(`Apuesta de ${name} eliminada`);
-  } catch(e) { showToast('Error: '+e.message); }
+function deleteBet(name) {
+  if(!confirm(`¿Borrar la apuesta de ${name}?`)) return;
+  delete bets[name]; delete premios[name];
+  saveAll(); renderRanking(); renderSummary();
+  showToast(`Apuesta de ${name} eliminada`);
 }
 
 function showTab(name) {
@@ -776,9 +668,9 @@ function showTab(name) {
 }
 
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2500);
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
 }
 
 loadData();
