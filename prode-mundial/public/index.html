@@ -94,20 +94,15 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .empty { text-align: center; padding: 2rem 1rem; color: var(--text3); font-size: 13px; }
   .error-msg { font-size: 12px; color: var(--red800); margin-top: 6px; display: none; }
-  .sync-bar { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 8px 12px; font-size: 12px; color: var(--text2); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .loading-screen { text-align: center; padding: 4rem 1rem; color: var(--text2); font-size: 14px; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border2); border-top-color: var(--text); border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 <div class="shell">
   <div class="app-title">🏆 Prode Mundial 2026</div>
   <div class="app-sub">Apostá los resultados y competí con el equipo · <span class="admin-toggle" onclick="openAdminOverlay()">modo admin</span></div>
-
-  <div class="sync-bar">
-    💾 Los datos se guardan en este navegador · Para compartir usá
-    <button class="btn btn-sm" onclick="exportData()">Exportar datos</button>
-    <button class="btn btn-sm" onclick="document.getElementById('import-input').click()">Importar datos</button>
-    <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)">
-  </div>
 
   <div id="admin-panel" class="admin-panel" style="display:none;">
     <div style="font-size:13px;font-weight:500;color:var(--amber800);margin-bottom:10px;">⚙️ Panel de administrador</div>
@@ -119,10 +114,6 @@
     <div style="margin-bottom:8px;"><label>Campeón real</label><select id="real-champion"><option value="">Elegí...</option></select></div>
     <div id="admin-results-list"></div>
     <button class="btn btn-sm mt1" onclick="saveResults()">Guardar resultados</button>
-    <div style="border-top:0.5px solid var(--border);margin:16px 0;"></div>
-    <div style="font-size:12px;font-weight:500;color:var(--amber800);margin-bottom:8px;">Datos del prode (compartir con el equipo)</div>
-    <button class="btn btn-sm" onclick="exportData()">📤 Exportar JSON</button>
-    <button class="btn btn-sm" style="margin-left:6px;" onclick="document.getElementById('import-input').click()">📥 Importar JSON</button>
   </div>
 
   <div class="tabs">
@@ -132,56 +123,61 @@
     <button class="tab" onclick="showTab('ver')">Ver todo</button>
   </div>
 
-  <div id="tab-apostar" class="section active">
-    <div id="step-login" class="card">
-      <div style="font-size:14px;font-weight:500;margin-bottom:10px;">¿Quién sos?</div>
-      <div id="member-chips" class="chips" style="margin-bottom:10px;"></div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input type="text" id="new-name" placeholder="Agregá tu nombre..." style="flex:1;" onkeydown="if(event.key==='Enter')addMember()" />
-        <button class="btn btn-sm" onclick="addMember()">+ Agregar</button>
-      </div>
-      <button class="btn btn-primary mt1" style="width:100%;" onclick="selectMember()">Empezar a apostar →</button>
-    </div>
-    <div id="step-bets" style="display:none;">
-      <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
-        <div><div style="font-size:14px;font-weight:500;" id="greeting"></div><div style="font-size:12px;color:var(--text2);">Completá los que quieras, guardá al final</div></div>
-        <button class="btn btn-sm" onclick="backToLogin()">← Cambiar</button>
-      </div>
-      <div class="card"><label>¿Quién va a salir campeón?</label><select id="champion-pick"><option value="">Elegí el campeón...</option></select></div>
-      <div id="matches-list"></div>
-      <button class="btn btn-primary mt1" style="width:100%;" onclick="saveBets()">Guardar apuestas 🎯</button>
-    </div>
-  </div>
+  <div id="loading-screen" class="loading-screen"><span class="spinner"></span>Cargando datos...</div>
+  <div id="app-content" style="display:none;">
 
-  <div id="tab-premios" class="section">
-    <div id="step-premios-login" class="card">
-      <div style="font-size:14px;font-weight:500;margin-bottom:10px;">¿Quién sos?</div>
-      <div id="member-chips-p" class="chips" style="margin-bottom:10px;"></div>
-      <button class="btn btn-primary mt1" style="width:100%;" onclick="selectMemberPremios()">Completar premios →</button>
-    </div>
-    <div id="step-premios-form" style="display:none;">
-      <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
-        <div style="font-size:14px;font-weight:500;" id="greeting-p"></div>
-        <button class="btn btn-sm" onclick="backToPremiosLogin()">← Cambiar</button>
+    <div id="tab-apostar" class="section active">
+      <div id="step-login" class="card">
+        <div style="font-size:14px;font-weight:500;margin-bottom:10px;">¿Quién sos?</div>
+        <div id="member-chips" class="chips" style="margin-bottom:10px;"></div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="new-name" placeholder="Agregá tu nombre..." style="flex:1;" onkeydown="if(event.key==='Enter')addMember()" />
+          <button class="btn btn-sm" onclick="addMember()">+ Agregar</button>
+        </div>
+        <button class="btn btn-primary mt1" style="width:100%;" onclick="selectMember()">Empezar a apostar →</button>
       </div>
-      <div id="awards-form"></div>
-      <button class="btn btn-primary mt1" style="width:100%;" onclick="savePremios()">Guardar premios 🏅</button>
+      <div id="step-bets" style="display:none;">
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
+          <div><div style="font-size:14px;font-weight:500;" id="greeting"></div><div style="font-size:12px;color:var(--text2);">Completá los que quieras, guardá al final</div></div>
+          <button class="btn btn-sm" onclick="backToLogin()">← Cambiar</button>
+        </div>
+        <div class="card"><label>¿Quién va a salir campeón?</label><select id="champion-pick"><option value="">Elegí el campeón...</option></select></div>
+        <div id="matches-list"></div>
+        <button class="btn btn-primary mt1" style="width:100%;" id="btn-save-bets" onclick="saveBets()">Guardar apuestas 🎯</button>
+      </div>
     </div>
-  </div>
 
-  <div id="tab-tabla" class="section">
-    <div id="podium-wrap"></div>
-    <div class="card">
-      <div style="font-size:15px;font-weight:500;margin-bottom:12px;">Ranking del equipo</div>
-      <div id="ranking-list"></div>
+    <div id="tab-premios" class="section">
+      <div id="step-premios-login" class="card">
+        <div style="font-size:14px;font-weight:500;margin-bottom:10px;">¿Quién sos?</div>
+        <div id="member-chips-p" class="chips" style="margin-bottom:10px;"></div>
+        <button class="btn btn-primary mt1" style="width:100%;" onclick="selectMemberPremios()">Completar premios →</button>
+      </div>
+      <div id="step-premios-form" style="display:none;">
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
+          <div style="font-size:14px;font-weight:500;" id="greeting-p"></div>
+          <button class="btn btn-sm" onclick="backToPremiosLogin()">← Cambiar</button>
+        </div>
+        <div id="awards-form"></div>
+        <button class="btn btn-primary mt1" style="width:100%;" onclick="savePremios()">Guardar premios 🏅</button>
+      </div>
     </div>
-    <div class="info-bar"><strong>Puntos:</strong> 3 pts resultado exacto · 1 pt ganador correcto · 5 pts campeón · 2 pts premio especial acertado</div>
-  </div>
 
-  <div id="tab-ver" class="section">
-    <div class="card" style="margin-bottom:12px;"><div style="font-size:15px;font-weight:500;margin-bottom:12px;">Campeones elegidos</div><div id="champ-summary"></div></div>
-    <div class="card" style="margin-bottom:12px;"><div style="font-size:15px;font-weight:500;margin-bottom:12px;">Premios especiales · resumen</div><div id="awards-summary"></div></div>
-    <div class="card"><div style="font-size:15px;font-weight:500;margin-bottom:12px;">Resultados más apostados</div><div id="scores-summary"></div></div>
+    <div id="tab-tabla" class="section">
+      <div id="podium-wrap"></div>
+      <div class="card">
+        <div style="font-size:15px;font-weight:500;margin-bottom:12px;">Ranking del equipo</div>
+        <div id="ranking-list"></div>
+      </div>
+      <div class="info-bar"><strong>Puntos:</strong> 3 pts resultado exacto · 1 pt ganador correcto · 5 pts campeón · 2 pts premio especial acertado</div>
+    </div>
+
+    <div id="tab-ver" class="section">
+      <div class="card" style="margin-bottom:12px;"><div style="font-size:15px;font-weight:500;margin-bottom:12px;">Campeones elegidos</div><div id="champ-summary"></div></div>
+      <div class="card" style="margin-bottom:12px;"><div style="font-size:15px;font-weight:500;margin-bottom:12px;">Premios especiales · resumen</div><div id="awards-summary"></div></div>
+      <div class="card"><div style="font-size:15px;font-weight:500;margin-bottom:12px;">Resultados más apostados</div><div id="scores-summary"></div></div>
+    </div>
+
   </div>
 </div>
 
@@ -201,8 +197,32 @@
 <div class="toast" id="toast"></div>
 
 <script>
+const SUPABASE_URL = 'https://teuqoeymkruhcoblnpsy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRldXFvZXlta3J1aGNvYmxucHN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMTAxNzAsImV4cCI6MjA5NTg4NjE3MH0.OYb9wy5qa3f3FNNj3Vyp9JxSzTB2d81xpwQzmVakZ-A';
 const ADMIN_PASS = 'mundial2026';
-const SK = 'prode26_';
+
+async function dbGet(key) {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/prode_data?key=eq.${key}&select=value`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const rows = await r.json();
+    return rows.length ? rows[0].value : null;
+  } catch(e) { return null; }
+}
+
+async function dbSet(key, value) {
+  await fetch(`${SUPABASE_URL}/rest/v1/prode_data`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=merge-duplicates',
+    },
+    body: JSON.stringify({ key, value, updated_at: new Date().toISOString() }),
+  });
+}
 
 const TEAMS = [
   {n:'Argentina',f:'🇦🇷'},{n:'Brasil',f:'🇧🇷'},{n:'Francia',f:'🇫🇷'},{n:'España',f:'🇪🇸'},
@@ -270,61 +290,28 @@ const AVATAR_COLORS = [
   ['#AFA9EC','#3C3489'],['#F0997B','#993C1D'],
 ];
 
-// ── STORAGE ──────────────────────────────────────────────────────
-function lsGet(k) { try { return JSON.parse(localStorage.getItem(SK+k)); } catch(e) { return null; } }
-function lsSet(k,v) { try { localStorage.setItem(SK+k, JSON.stringify(v)); } catch(e) {} }
+let members=[], bets={}, premios={}, slots={}, results={scores:{},champion:null,awards:{}};
+let currentMember=null, currentPMember=null, adminUnlocked=false;
 
-let members = [], bets = {}, premios = {}, slots = {}, results = {scores:{},champion:null,awards:{}};
-let currentMember = null, currentPMember = null, adminUnlocked = false;
-
-function loadData() {
-  members = lsGet('members') || ['Jojó','Marcos','Valen','Lucas','Caro','Nico'];
-  bets     = lsGet('bets')    || {};
-  premios  = lsGet('premios') || {};
-  slots    = lsGet('slots')   || {};
-  results  = lsGet('results') || {scores:{},champion:null,awards:{}};
+async function loadData() {
+  try {
+    const [m,b,p,s,r] = await Promise.all([
+      dbGet('members'), dbGet('bets'), dbGet('premios'), dbGet('slots'), dbGet('results')
+    ]);
+    members = m || ['Jojó','Marcos','Valen','Lucas','Caro','Nico'];
+    bets    = b || {};
+    premios = p || {};
+    slots   = s || {};
+    results = r || {scores:{},champion:null,awards:{}};
+  } catch(e) {
+    members = ['Jojó','Marcos','Valen','Lucas','Caro','Nico'];
+    showToast('Error conectando — revisá la conexión');
+  }
+  document.getElementById('loading-screen').style.display='none';
+  document.getElementById('app-content').style.display='block';
   renderAll();
 }
 
-function saveAll() {
-  lsSet('members', members); lsSet('bets', bets);
-  lsSet('premios', premios); lsSet('slots', slots);
-  lsSet('results', results);
-}
-
-// ── EXPORT / IMPORT ───────────────────────────────────────────────
-function exportData() {
-  const data = { members, bets, premios, slots, results };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'prode-mundial-2026.json';
-  a.click();
-  showToast('Datos exportados 📤');
-}
-
-function importData(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (data.members) members = data.members;
-      if (data.bets)    bets    = data.bets;
-      if (data.premios) premios = data.premios;
-      if (data.slots)   slots   = data.slots;
-      if (data.results) results = data.results;
-      saveAll();
-      renderAll();
-      showToast('Datos importados ✓');
-    } catch(err) { showToast('Error al importar'); }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
-// ── RENDER ────────────────────────────────────────────────────────
 function renderAll() {
   renderChips('member-chips', false);
   renderChips('member-chips-p', true);
@@ -341,45 +328,45 @@ function renderChips(id, forP) {
 }
 
 function toggleMember(el, name, forP) {
-  const id = forP ? 'member-chips-p' : 'member-chips';
-  document.querySelectorAll(`#${id} .chip`).forEach(c => c.classList.remove('selected'));
+  const id = forP?'member-chips-p':'member-chips';
+  document.querySelectorAll(`#${id} .chip`).forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
-  if (forP) currentPMember = name; else currentMember = name;
+  if(forP) currentPMember=name; else currentMember=name;
 }
 
-function addMember() {
-  const inp = document.getElementById('new-name');
-  const name = inp.value.trim();
-  if (!name || members.includes(name)) { inp.value=''; return; }
+async function addMember() {
+  const inp=document.getElementById('new-name');
+  const name=inp.value.trim();
+  if(!name||members.includes(name)){inp.value='';return;}
   members.push(name); inp.value='';
-  saveAll(); renderChips('member-chips', false); renderChips('member-chips-p', true);
+  await dbSet('members', members);
+  renderChips('member-chips',false); renderChips('member-chips-p',true);
   renderRanking(); showToast(`${name} agregado ✓`);
 }
 
-function getT(name) { return TEAMS.find(t => t.n === name) || {n:name,f:'🏆'}; }
+function getT(name){return TEAMS.find(t=>t.n===name)||{n:name,f:'🏆'};}
 
 function renderChampionSelect() {
-  const sel = document.getElementById('champion-pick');
-  sel.innerHTML = '<option value="">Elegí el campeón...</option>' + TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
+  const sel=document.getElementById('champion-pick');
+  sel.innerHTML='<option value="">Elegí el campeón...</option>'+TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
 }
 
 function buildKO() {
-  return KO_TEMPLATE.map(m => {
-    const h = slots[m.sh]||null, a = slots[m.sa]||null;
-    const th = h?getT(h):null, ta = a?getT(a):null;
-    return {...m, h:h||'Por definir', a:a||'Por definir', hf:th?th.f:'🏆', af:ta?ta.f:'🏆', defined:!!(h&&a)};
+  return KO_TEMPLATE.map(m=>{
+    const h=slots[m.sh]||null, a=slots[m.sa]||null;
+    const th=h?getT(h):null, ta=a?getT(a):null;
+    return {...m,h:h||'Por definir',a:a||'Por definir',hf:th?th.f:'🏆',af:ta?ta.f:'🏆',defined:!!(h&&a)};
   });
 }
 
 function renderMatches() {
-  const container = document.getElementById('matches-list');
-  if (!container) return;
-  const all = [...GROUPS_MATCHES, ...buildKO()];
-  let lastR='', html='';
-  all.forEach(m => {
-    if (m.r!==lastR) { html+=`<div class="round-label">${m.r}</div>`; lastR=m.r; }
-    const isKO = KO_TEMPLATE.some(k=>k.id===m.id);
-    const dim = isKO&&!m.defined ? 'opacity:0.45;' : '';
+  const container=document.getElementById('matches-list'); if(!container)return;
+  const all=[...GROUPS_MATCHES,...buildKO()];
+  let lastR='',html='';
+  all.forEach(m=>{
+    if(m.r!==lastR){html+=`<div class="round-label">${m.r}</div>`;lastR=m.r;}
+    const isKO=KO_TEMPLATE.some(k=>k.id===m.id);
+    const dim=isKO&&!m.defined?'opacity:0.45;':'';
     html+=`<div class="match-row" style="${dim}">
       <div class="team-side"><span class="team-flag">${m.hf}</span><span class="team-name">${m.h}</span></div>
       <input type="number" min="0" max="99" class="score-box" id="sh-${m.id}" placeholder="–" ${isKO&&!m.defined?'disabled':''}>
@@ -388,15 +375,14 @@ function renderMatches() {
       <div class="team-side right"><span class="team-flag">${m.af}</span><span class="team-name">${m.a}</span></div>
     </div>`;
   });
-  container.innerHTML = html;
+  container.innerHTML=html;
 }
 
-// ── BETS ──────────────────────────────────────────────────────────
 function selectMember() {
-  if (!currentMember) {
-    const chips = document.querySelectorAll('#member-chips .chip');
-    if (chips.length) { chips[0].classList.add('selected'); currentMember = members[0]; }
-    else { showToast('Seleccioná o agregá tu nombre'); return; }
+  if(!currentMember){
+    const chips=document.querySelectorAll('#member-chips .chip');
+    if(chips.length){chips[0].classList.add('selected');currentMember=members[0];}
+    else{showToast('Seleccioná o agregá tu nombre');return;}
   }
   document.getElementById('step-login').style.display='none';
   document.getElementById('step-bets').style.display='block';
@@ -404,40 +390,43 @@ function selectMember() {
   loadExistingBets();
 }
 
-function backToLogin() {
+function backToLogin(){
   document.getElementById('step-login').style.display='block';
   document.getElementById('step-bets').style.display='none';
 }
 
-function loadExistingBets() {
-  const b = bets[currentMember]; if (!b) return;
-  if (b.champion) document.getElementById('champion-pick').value = b.champion;
-  const all = [...GROUPS_MATCHES, ...buildKO()];
-  all.forEach(m => {
-    const sh=document.getElementById('sh-'+m.id), sa=document.getElementById('sa-'+m.id);
-    if (sh&&sa&&b.scores?.[m.id]!==undefined) { sh.value=b.scores[m.id].h??''; sa.value=b.scores[m.id].a??''; }
+function loadExistingBets(){
+  const b=bets[currentMember]; if(!b)return;
+  if(b.champion) document.getElementById('champion-pick').value=b.champion;
+  const all=[...GROUPS_MATCHES,...buildKO()];
+  all.forEach(m=>{
+    const sh=document.getElementById('sh-'+m.id),sa=document.getElementById('sa-'+m.id);
+    if(sh&&sa&&b.scores?.[m.id]!==undefined){sh.value=b.scores[m.id].h??'';sa.value=b.scores[m.id].a??'';}
   });
 }
 
-function saveBets() {
-  const champion = document.getElementById('champion-pick').value;
-  const scores = {};
-  const all = [...GROUPS_MATCHES, ...buildKO()];
-  all.forEach(m => {
-    const h=document.getElementById('sh-'+m.id), a=document.getElementById('sa-'+m.id);
-    if (h&&a&&h.value!==''&&a.value!=='') scores[m.id]={h:parseInt(h.value),a:parseInt(a.value)};
+async function saveBets(){
+  const btn=document.getElementById('btn-save-bets');
+  btn.disabled=true; btn.textContent='Guardando...';
+  const champion=document.getElementById('champion-pick').value;
+  const scores={};
+  const all=[...GROUPS_MATCHES,...buildKO()];
+  all.forEach(m=>{
+    const h=document.getElementById('sh-'+m.id),a=document.getElementById('sa-'+m.id);
+    if(h&&a&&h.value!==''&&a.value!=='') scores[m.id]={h:parseInt(h.value),a:parseInt(a.value)};
   });
-  bets[currentMember] = {champion, scores, updated: new Date().toISOString()};
-  saveAll(); renderRanking(); renderSummary();
+  bets[currentMember]={champion,scores,updated:new Date().toISOString()};
+  await dbSet('bets',bets);
+  renderRanking(); renderSummary();
   showToast('¡Apuesta guardada! 🎯');
+  btn.disabled=false; btn.textContent='Guardar apuestas 🎯';
 }
 
-// ── PREMIOS ───────────────────────────────────────────────────────
-function selectMemberPremios() {
-  if (!currentPMember) {
-    const chips = document.querySelectorAll('#member-chips-p .chip');
-    if (chips.length) { chips[0].classList.add('selected'); currentPMember = members[0]; }
-    else { showToast('Seleccioná tu nombre'); return; }
+function selectMemberPremios(){
+  if(!currentPMember){
+    const chips=document.querySelectorAll('#member-chips-p .chip');
+    if(chips.length){chips[0].classList.add('selected');currentPMember=members[0];}
+    else{showToast('Seleccioná tu nombre');return;}
   }
   document.getElementById('step-premios-login').style.display='none';
   document.getElementById('step-premios-form').style.display='block';
@@ -445,60 +434,60 @@ function selectMemberPremios() {
   renderAwardsForm(); loadExistingPremios();
 }
 
-function backToPremiosLogin() {
+function backToPremiosLogin(){
   document.getElementById('step-premios-login').style.display='block';
   document.getElementById('step-premios-form').style.display='none';
 }
 
-function renderAwardsForm() {
-  const teamOpts = '<option value="">Elegí una selección...</option>'+TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
-  document.getElementById('awards-form').innerHTML = AWARDS.map(a=>`
+function renderAwardsForm(){
+  const teamOpts='<option value="">Elegí una selección...</option>'+TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
+  document.getElementById('awards-form').innerHTML=AWARDS.map(a=>`
     <div class="award-card">
       <div class="award-header"><div class="award-icon">${a.icon}</div><div><div class="award-title">${a.title}</div><div class="award-sub">${a.sub}</div></div></div>
       ${a.type==='team'?`<select id="aw-${a.id}">${teamOpts}</select>`:`<input type="text" id="aw-${a.id}" placeholder="${a.ph||''}" />`}
     </div>`).join('');
 }
 
-function loadExistingPremios() {
-  const p = premios[currentPMember]; if (!p) return;
-  AWARDS.forEach(a => { const el=document.getElementById('aw-'+a.id); if(el&&p[a.id]) el.value=p[a.id]; });
+function loadExistingPremios(){
+  const p=premios[currentPMember]; if(!p)return;
+  AWARDS.forEach(a=>{const el=document.getElementById('aw-'+a.id);if(el&&p[a.id])el.value=p[a.id];});
 }
 
-function savePremios() {
-  const data = {};
-  AWARDS.forEach(a => { const el=document.getElementById('aw-'+a.id); if(el&&el.value) data[a.id]=el.value; });
-  premios[currentPMember] = {...data, updated: new Date().toISOString()};
-  saveAll(); renderSummary(); showToast('¡Premios guardados! 🏅');
+async function savePremios(){
+  const data={};
+  AWARDS.forEach(a=>{const el=document.getElementById('aw-'+a.id);if(el&&el.value)data[a.id]=el.value;});
+  premios[currentPMember]={...data,updated:new Date().toISOString()};
+  await dbSet('premios',premios);
+  renderSummary(); showToast('¡Premios guardados! 🏅');
 }
 
-// ── RANKING ───────────────────────────────────────────────────────
-function calcPts(name) {
-  const bet = bets[name]; if (!bet) return 0;
-  let pts = 0;
-  if (results.champion && bet.champion && results.champion===bet.champion) pts+=5;
-  const rs=results.scores||{}, bs=bet.scores||{};
-  Object.keys(rs).forEach(id => {
-    if (!bs[id]) return;
-    const r=rs[id], b=bs[id];
-    if (r.h===b.h&&r.a===b.a) { pts+=3; return; }
-    const rw=r.h>r.a?'h':r.a>r.h?'a':'d', bw=b.h>b.a?'h':b.a>b.h?'a':'d';
-    if (rw===bw) pts+=1;
+function calcPts(name){
+  const bet=bets[name]; if(!bet)return 0;
+  let pts=0;
+  if(results.champion&&bet.champion&&results.champion===bet.champion) pts+=5;
+  const rs=results.scores||{},bs=bet.scores||{};
+  Object.keys(rs).forEach(id=>{
+    if(!bs[id])return;
+    const r=rs[id],b=bs[id];
+    if(r.h===b.h&&r.a===b.a){pts+=3;return;}
+    const rw=r.h>r.a?'h':r.a>r.h?'a':'d',bw=b.h>b.a?'h':b.a>b.h?'a':'d';
+    if(rw===bw)pts+=1;
   });
-  const ra=results.awards||{}, pa=premios[name]||{};
-  Object.keys(ra).forEach(id => { if(ra[id]&&pa[id]&&ra[id].toLowerCase()===pa[id].toLowerCase()) pts+=2; });
+  const ra=results.awards||{},pa=premios[name]||{};
+  Object.keys(ra).forEach(id=>{if(ra[id]&&pa[id]&&ra[id].toLowerCase()===pa[id].toLowerCase())pts+=2;});
   return pts;
 }
 
-function renderRanking() {
-  const sorted = members.map((m,i)=>({
-    name:m, idx:i, pts:calcPts(m),
+function renderRanking(){
+  const sorted=members.map((m,i)=>({
+    name:m,idx:i,pts:calcPts(m),
     champion:bets[m]?.champion||null,
     betCount:bets[m]?.scores?Object.keys(bets[m].scores).length:0,
     hasPremios:!!premios[m],
   })).sort((a,b)=>b.pts-a.pts||b.betCount-a.betCount);
 
   const pw=document.getElementById('podium-wrap');
-  if (sorted.length>=2) {
+  if(sorted.length>=2){
     const order=sorted.length>=3?[sorted[1],sorted[0],sorted[2]]:[sorted[1],sorted[0]];
     const bc=sorted.length>=3?['pb2','pb1','pb3']:['pb2','pb1'];
     const med=sorted.length>=3?['🥈','🥇','🥉']:['🥈','🥇'];
@@ -522,10 +511,9 @@ function renderRanking() {
     </div>`).join(''):'<div class="empty">Sin participantes</div>';
 }
 
-// ── SUMMARY ───────────────────────────────────────────────────────
-function renderSummary() {
+function renderSummary(){
   const cv={};
-  Object.entries(bets).forEach(([m,b])=>{ if(b.champion){cv[b.champion]=cv[b.champion]||[];cv[b.champion].push(m);} });
+  Object.entries(bets).forEach(([m,b])=>{if(b.champion){cv[b.champion]=cv[b.champion]||[];cv[b.champion].push(m);}});
   const sc=Object.entries(cv).sort((a,b)=>b[1].length-a[1].length);
   document.getElementById('champ-summary').innerHTML=sc.length?sc.map(([c,v])=>`
     <div class="winner-row"><span style="font-size:22px;">${getT(c).f}</span>
@@ -535,16 +523,16 @@ function renderSummary() {
   let ah='';
   AWARDS.forEach(award=>{
     const votes={};
-    Object.entries(premios).forEach(([m,p])=>{ if(p[award.id]){votes[p[award.id]]=votes[p[award.id]]||[];votes[p[award.id]].push(m);} });
+    Object.entries(premios).forEach(([m,p])=>{if(p[award.id]){votes[p[award.id]]=votes[p[award.id]]||[];votes[p[award.id]].push(m);}});
     const sv=Object.entries(votes).sort((a,b)=>b[1].length-a[1].length);
-    if(!sv.length) return;
+    if(!sv.length)return;
     ah+=`<div style="margin-bottom:12px;"><div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;">${award.icon} ${award.title}</div><div>${sv.map(([ans,v])=>`<span class="answer-pill">${ans} <span style="color:var(--text3);font-size:10px;">${v.length}×</span></span>`).join('')}</div></div>`;
   });
   document.getElementById('awards-summary').innerHTML=ah||'<div class="empty">Sin votos todavía</div>';
 
   const sc2={};
   Object.entries(bets).forEach(([m,b])=>{
-    if(!b.scores) return;
+    if(!b.scores)return;
     Object.entries(b.scores).forEach(([id,s])=>{
       const k=id+'|'+s.h+'-'+s.a;
       if(!sc2[k]){const match=[...GROUPS_MATCHES,...buildKO()].find(x=>x.id===id);sc2[k]={match,h:s.h,a:s.a,v:[]};}
@@ -558,25 +546,25 @@ function renderSummary() {
     <span style="font-size:18px;">${s.match.af}</span><span style="font-size:12px;color:var(--text2);margin-left:8px;">${s.v.length}×</span></div>`).join(''):'<div class="empty">Sin resultados en común aún</div>';
 }
 
-// ── ADMIN ─────────────────────────────────────────────────────────
-function openAdminOverlay() {
-  if (adminUnlocked) { toggleAdminPanel(); return; }
+function openAdminOverlay(){
+  if(adminUnlocked){toggleAdminPanel();return;}
   document.getElementById('admin-overlay').classList.add('show');
   setTimeout(()=>document.getElementById('admin-pass-input').focus(),80);
 }
 
-function closeAdminOverlay() {
+function closeAdminOverlay(){
   document.getElementById('admin-overlay').classList.remove('show');
   document.getElementById('admin-pass-input').value='';
   document.getElementById('admin-pass-error').style.display='none';
 }
 
-function checkAdminPass() {
+function checkAdminPass(){
   const pass=document.getElementById('admin-pass-input').value;
-  if (pass===ADMIN_PASS) {
+  if(pass===ADMIN_PASS){
     adminUnlocked=true; closeAdminOverlay();
     renderAdminPanel(); renderAdminResults(); renderChampionSelectReal();
     document.getElementById('admin-panel').style.display='block';
+    renderRanking();
   } else {
     document.getElementById('admin-pass-error').style.display='block';
     document.getElementById('admin-pass-input').value='';
@@ -584,13 +572,13 @@ function checkAdminPass() {
   }
 }
 
-function toggleAdminPanel() {
+function toggleAdminPanel(){
   const p=document.getElementById('admin-panel');
   p.style.display=p.style.display==='none'?'block':'none';
   if(p.style.display==='block'){renderAdminPanel();renderAdminResults();renderChampionSelectReal();}
 }
 
-function renderAdminPanel() {
+function renderAdminPanel(){
   const slotDefs=[
     {g:'Octavos de final',pairs:[{l:'P1',sh:'oct_h1',sa:'oct_a1'},{l:'P2',sh:'oct_h2',sa:'oct_a2'},{l:'P3',sh:'oct_h3',sa:'oct_a3'},{l:'P4',sh:'oct_h4',sa:'oct_a4'},{l:'P5',sh:'oct_h5',sa:'oct_a5'},{l:'P6',sh:'oct_h6',sa:'oct_a6'},{l:'P7',sh:'oct_h7',sa:'oct_a7'},{l:'P8',sh:'oct_h8',sa:'oct_a8'}]},
     {g:'Cuartos de final',pairs:[{l:'P1',sh:'qf_h1',sa:'qf_a1'},{l:'P2',sh:'qf_h2',sa:'qf_a2'},{l:'P3',sh:'qf_h3',sa:'qf_a3'},{l:'P4',sh:'qf_h4',sa:'qf_a4'}]},
@@ -612,27 +600,28 @@ function renderAdminPanel() {
   });
   document.getElementById('admin-slots').innerHTML=html;
   slotDefs.forEach(g=>g.pairs.forEach(p=>{
-    if(slots[p.sh]) document.getElementById('adm-'+p.sh).value=slots[p.sh];
-    if(slots[p.sa]) document.getElementById('adm-'+p.sa).value=slots[p.sa];
+    if(slots[p.sh])document.getElementById('adm-'+p.sh).value=slots[p.sh];
+    if(slots[p.sa])document.getElementById('adm-'+p.sa).value=slots[p.sa];
   }));
 }
 
-function saveSlots() {
+async function saveSlots(){
   const newSlots={};
-  document.querySelectorAll('[id^="adm-"]').forEach(sel=>{ if(sel.value) newSlots[sel.id.replace('adm-','')]=sel.value; });
-  slots=newSlots; saveAll(); renderMatches(); showToast('Equipos actualizados ✓');
+  document.querySelectorAll('[id^="adm-"]').forEach(sel=>{if(sel.value)newSlots[sel.id.replace('adm-','')]=sel.value;});
+  slots=newSlots;
+  await dbSet('slots',slots);
+  renderMatches(); showToast('Equipos actualizados ✓');
 }
 
-function renderChampionSelectReal() {
-  const sel=document.getElementById('real-champion');
-  if(!sel) return;
+function renderChampionSelectReal(){
+  const sel=document.getElementById('real-champion'); if(!sel)return;
   sel.innerHTML='<option value="">Elegí...</option>'+TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
   if(results.champion) sel.value=results.champion;
 }
 
-function renderAdminResults() {
+function renderAdminResults(){
   const teamOpts='<option value="">—</option>'+TEAMS.map(t=>`<option value="${t.n}">${t.f} ${t.n}</option>`).join('');
-  const el=document.getElementById('admin-results-list'); if(!el) return;
+  const el=document.getElementById('admin-results-list'); if(!el)return;
   let html='<div style="font-size:11px;color:var(--amber800);margin-bottom:6px;">Premios especiales reales</div>';
   AWARDS.forEach(a=>{
     html+=`<div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;">
@@ -642,32 +631,34 @@ function renderAdminResults() {
     </div>`;
   });
   el.innerHTML=html;
-  AWARDS.forEach(a=>{ const e=document.getElementById('real-aw-'+a.id); if(e&&results.awards?.[a.id]) e.value=results.awards[a.id]; });
+  AWARDS.forEach(a=>{const e=document.getElementById('real-aw-'+a.id);if(e&&results.awards?.[a.id])e.value=results.awards[a.id];});
 }
 
-function saveResults() {
+async function saveResults(){
   const champion=document.getElementById('real-champion')?.value||null;
   const awards={};
-  AWARDS.forEach(a=>{ const el=document.getElementById('real-aw-'+a.id); if(el&&el.value) awards[a.id]=el.value; });
-  results={scores:results.scores||{}, champion, awards};
-  saveAll(); renderRanking(); showToast('Resultados guardados ✓');
+  AWARDS.forEach(a=>{const el=document.getElementById('real-aw-'+a.id);if(el&&el.value)awards[a.id]=el.value;});
+  results={scores:results.scores||{},champion,awards};
+  await dbSet('results',results);
+  renderRanking(); showToast('Resultados guardados ✓');
 }
 
-function deleteBet(name) {
-  if(!confirm(`¿Borrar la apuesta de ${name}?`)) return;
+async function deleteBet(name){
+  if(!confirm(`¿Borrar la apuesta de ${name}?`))return;
   delete bets[name]; delete premios[name];
-  saveAll(); renderRanking(); renderSummary();
+  await Promise.all([dbSet('bets',bets),dbSet('premios',premios)]);
+  renderRanking(); renderSummary();
   showToast(`Apuesta de ${name} eliminada`);
 }
 
-function showTab(name) {
+function showTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelector(`.tab[onclick="showTab('${name}')"]`).classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
 }
 
-function showToast(msg) {
+function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2500);
